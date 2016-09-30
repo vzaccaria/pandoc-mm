@@ -7,3 +7,5 @@ test/mm.pdf
 test/mm.tex
 test/test.tex
 test/tmp.tex
+.pandoc-mm
+final.pdf
