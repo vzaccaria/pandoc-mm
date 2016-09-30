@@ -1,12 +1,8 @@
 
 all: ./test/test.pdf
 
-./test/tmp.tex: ./src/Main.hs Category.org
-	stack install . && cat Category.org | pandoc-mm	> ./test/tmp.tex
-
-./test/test.tex: ./test/header.tex ./test/tmp.tex ./test/final.tex
-	cat $^ > $@
-
+./test/test.tex: ./src/Main.hs Category.org
+	stack install . && cat Category.org | pandoc-mm	> $@
 
 show:
 	stack install . && cat Category.org | pandoc-mm 

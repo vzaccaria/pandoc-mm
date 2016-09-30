@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Text.Pandoc
@@ -7,6 +8,8 @@ import Text.Pandoc.Walk (walk)
 import Debug.Trace
 import Structure
 import Data.String.Interpolate
+import System.Process
+import System.Directory
 
 readDoc :: String -> Pandoc
 readDoc s = case readOrg def s of
@@ -46,15 +49,36 @@ myf x = concatMap myf' x where
 
   myf' q = []
 
-template d = [i|
-ciao #{d}
+template title dta = [i|
+\\documentclass{article}
+\\usepackage{tikz}
+\\usetikzlibrary{mindmap}
+\\pagestyle{empty}
+\\begin{document}
+\\begin{tikzpicture}[mindmap, grow cyclic, every node/.style=concept, concept color=orange!40,
+    level 1/.append style={level distance=5cm,sibling angle=90},
+    level 2/.append style={level distance=3cm,sibling angle=45},]
+\\node{#{title}}
+#{dta};
+\\end{tikzpicture}
+\\end{document}
 |]
 
 main :: IO ()
--- main = do {
---   dta <- getContents;
---   print $ readDoc dta 
---     }
+main = do {
+  dta <- getContents;
+  draw "final.pdf "$ template "Root" $ docf dta
+} where
+  doct dta = onStructure myf $ readDoc dta
+  docf dta = writeDoc $ doct dta;
 
-main = interact (writeDoc . (onStructure myf). readDoc)
 
+
+draw :: String -> String -> IO ()
+draw name exp = do
+    system "rm -rf .pandoc-mm";
+    createDirectory ".pandoc-mm";
+    writeFile ".pandoc-mm/mm.tex" $ exp;
+    system ("cd .pandoc-mm && pdflatex mm.tex")
+    system ("pdfcrop .pandoc-mm/mm.pdf " ++ name);
+    return ();

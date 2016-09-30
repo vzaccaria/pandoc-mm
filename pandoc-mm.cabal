@@ -20,3 +20,5 @@ executable pandoc-mm
                      , pandoc
                      , pandoc-types
                      , interpolate
+                     , process
+                     , directory
