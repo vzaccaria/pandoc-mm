@@ -18,6 +18,11 @@ import MindMap.Print
 import Utils
 
 
+test :: IO Pandoc
+test = do
+  f <- readFile "Category.org";
+  return $ readDoc f
+  
 testStruct :: IO Structure
 testStruct = do {
   f <- readFile "Category.org";

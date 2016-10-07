@@ -5,6 +5,7 @@ module MindMap.Data where
 import Text.Pandoc
 import Text.Pandoc.Error
 import Text.Pandoc.Walk (walk)
+import qualified Data.Map as Map
 import Debug.Trace
 import Data.List
 import Data.String.Interpolate
@@ -22,12 +23,10 @@ type SubStructures = Forest StructureLeaf
 
 
 data MindMap = M {
-  getMapName :: String,
-  getAuthor :: Maybe String,
+  getMapName :: Maybe [Inline],
+  getAuthor :: Maybe [Inline],
   getStructure :: Structure
-  }
-
--- We need to start from a Heading 1
+  } deriving (Show)
 
 type Chunk = (Block, [Block])
 
@@ -43,13 +42,14 @@ add x cs@(_:_)    =
   in i ++ [(h, l ++ [x])]
 add x []          = error "Sorry, the document should begin with at least one top concept"
 
-
-
+asDasherized :: [Inline] -> [Char]
 asDasherized = concatMap dasherize
 
+asPlainString :: [Inline] -> [Char]
 asPlainString = concatMap f where
   f (Str s) = s
   f Space = " "
+  f _ = "*"
 
 -- Need to use unfoldr (anamorphism):
 --
@@ -68,7 +68,7 @@ toStructure n0 ((h@(Header n1 _ text), bs):cs)
                     subFor= unfoldr (toStructure $ n0 + 1) valid
                     currentTree = Node (Concept (asDasherized text) (asPlainString text) bs) subFor
                 in
-                    Just (currentTree, remaining)
+                     Just (currentTree, remaining)
    | n0 /= n1 = Nothing
 toStructure _ [] = Nothing
 
@@ -92,11 +92,17 @@ toStructure _ [] = Nothing
 -- parseChunks' cs = unfoldTree toStructure' cs
 
 parseChunks :: [Chunk] -> Structure 
-parseChunks cs = let subFor= unfoldr (toStructure 1) cs
-                     currentTree = Node (Concept "root" "Root" []) subFor
-     in currentTree
-
+parseChunks cs =
+  let subFor= unfoldr (toStructure 1) cs
+      currentTree = Node (Concept "root" "Root" []) subFor
+  in currentTree
 
 getChunks :: Pandoc -> [Chunk]
 getChunks (Pandoc _ bs) = foldl (flip add) [] bs
 
+
+parseMindMap :: Pandoc -> MindMap
+parseMindMap x@(Pandoc meta blocks) = M (getMV "title") (getMV "author") (parseChunks $ getChunks x) where
+  getMV k = case Map.lookup k (unMeta meta) of
+    Just (MetaInlines i) -> Just i
+    otherwise -> Nothing
