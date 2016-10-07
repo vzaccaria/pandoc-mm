@@ -22,3 +22,5 @@ executable pandoc-mm
                      , interpolate
                      , process
                      , directory
+                     , mtl
+                     , containers

@@ -9,3 +9,5 @@ test/test.tex
 test/tmp.tex
 .pandoc-mm
 final.pdf
+x.json
+x.pdf
