@@ -17,7 +17,9 @@ import Data.Tree
 
 import Utils
 
-data StructureLeaf = Concept { getID::String, getName::String, contents::[Block] } deriving (Show)
+type HeadingMeta = Map.Map String String
+
+data StructureLeaf = Concept { getID::String, getName::String, getHeadingMeta::HeadingMeta, contents::[Block] } deriving (Show)
 type Structure     = Tree StructureLeaf
 type SubStructures = Forest StructureLeaf
 
@@ -26,7 +28,11 @@ data MindMap = M {
   getMapName :: Maybe [Inline],
   getAuthor :: Maybe [Inline],
   getStructure :: Structure
-  } deriving (Show)
+  }
+
+getMindMapName :: MindMap -> String
+getMindMapName (M (Just n) _ _) = asPlainString n
+getMindMapName (M _ _ _       ) = "No name"
 
 type Chunk = (Block, [Block])
 
@@ -61,40 +67,23 @@ asPlainString = concatMap f where
 --
 
 toStructure :: Int -> [Chunk] -> Maybe (Structure, [Chunk])
-toStructure n0 ((h@(Header n1 _ text), bs):cs)
+toStructure n0 ((h@(Header n1 (_,_,mt) text), bs):cs)
    | n0 == n1 = let
                     getValidBlocks     = takeWhile' (\x -> getLevel x > n1)
                     (valid, remaining) = getValidBlocks cs
                     subFor= unfoldr (toStructure $ n0 + 1) valid
-                    currentTree = Node (Concept (asDasherized text) (asPlainString text) bs) subFor
+                    currentTree = Node (Concept (asDasherized text) (asPlainString text) (Map.fromList mt) bs) subFor
                 in
                      Just (currentTree, remaining)
    | n0 /= n1 = Nothing
 toStructure _ [] = Nothing
 
 
--- Or, we could use unfoldTree
---
--- unfoldTree :: (b -> (a, [b])) -> b -> Tree a
---
--- So, we'd need
---
--- ([Chunk] -> (StructureLeaf, [ [Chunk] ]))
-
--- toStructure' ::  [Chunk] -> (StructureLeaf, [ [Chunk] ])
--- toStructure' ((h@(Header n1 _ text), bs):cs) =
---      let (valid, remaining) = getValidBlocks cs
---          getValidBlocks     = takeWhile' (\x -> getLevel x > n1)
---          currentLeaf = Concept (asPlainString text) bs
---       in (currentLeaf, [ valid ])
-
--- parseChunks' :: [ Chunk ] -> Structure
--- parseChunks' cs = unfoldTree toStructure' cs
 
 parseChunks :: [Chunk] -> Structure 
 parseChunks cs =
   let subFor= unfoldr (toStructure 1) cs
-      currentTree = Node (Concept "root" "Root" []) subFor
+      currentTree = Node (Concept "root" "Root" (Map.empty) []) subFor
   in currentTree
 
 getChunks :: Pandoc -> [Chunk]
@@ -105,4 +94,4 @@ parseMindMap :: Pandoc -> MindMap
 parseMindMap x@(Pandoc meta blocks) = M (getMV "title") (getMV "author") (parseChunks $ getChunks x) where
   getMV k = case Map.lookup k (unMeta meta) of
     Just (MetaInlines i) -> Just i
-    otherwise -> Nothing
+    _ -> Nothing

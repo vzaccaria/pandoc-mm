@@ -22,21 +22,10 @@ test :: IO Pandoc
 test = do
   f <- readFile "Category.org";
   return $ readDoc f
-  
-testStruct :: IO Structure
-testStruct = do {
-  f <- readFile "Category.org";
-  return $ parseChunks $ getChunks $ readDoc f
+
+testmm :: IO MindMap
+testmm = do {
+  f <- test;
+  return $ parseMindMap f
 }
 
-testDraw = testStruct >>= (putStrLn . drawStruct)
-
-
-testHierarchy = do {
-  x <- testStruct;
-  return $ asStructuredData  "root" x
-}
-
-
-p = testHierarchy >>= printWithTemplate
-f = testHierarchy >>= (drawWithTemplate "x.pdf")

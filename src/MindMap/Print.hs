@@ -1,12 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
-module MindMap.Print where
+module MindMap.Print (drawMindMap, printMindMap, printMindMapLatex) where
 
 import Text.Pandoc
 import Text.Pandoc.Error
 import Text.Pandoc.Walk (walk)
 import Debug.Trace
 import Data.List
+import qualified Data.Map as Map
 import Data.String.Interpolate
 import System.Process
 import System.Directory
@@ -37,26 +38,23 @@ asLatex d = template $ writeDoc d
 
 
 drawStruct :: Structure -> String
-drawStruct t = drawTree (fmap f t) where
-   f (Concept idn nm c) = nm ++ " - " ++ (show c)
+drawStruct t = drawTree (fmap f t) where 
+   f (Concept idn nm mta c) = nm ++ "-" ++ (show mta) ++ " - " ++ (show c) 
 
 
 asStructuredData :: String -> Tree StructureLeaf -> String
 asStructuredData r node = 
     let contents = concatMap (\x -> asStructuredData r x) (subForest node)
         identifier = getID $ rootLabel node
+        color = case Map.lookup "color" (getHeadingMeta $ rootLabel node) of
+          (Just c) -> [i| color=#{c} |]
+          _ -> ""
     in
-        if identifier == r
-          then [i| \\node{#{identifier}}
-                 #{contents} |]
-          else [i| child { node (#{identifier}) {#{getName $ rootLabel node}}
-                 #{contents}} |]
-
-printWithTemplate :: String -> IO ()
-printWithTemplate s = putStrLn (template s)
-
-drawWithTemplate :: String -> String -> IO ()
-drawWithTemplate name exp = draw name (template exp)
+        if identifier == "root"
+          then [i| \\node{#{r}}
+  #{contents} |]
+          else [i| child[concept #{color}] { node[concept] (#{identifier}) {#{getName $ rootLabel node}}
+  #{contents}} |]
 
 draw :: String -> String -> IO ()
 draw name exp = do
@@ -67,3 +65,19 @@ draw name exp = do
     system ("pdfcrop .pandoc-mm/mm.pdf " ++ name);
     return ();
 
+drawMindMap :: String -> MindMap -> IO ()
+drawMindMap fn m = let sStruct = asStructuredData (getMindMapName m) (getStructure m)
+                       in draw fn $ asMindMapLatex m
+
+asMindMapLatex :: MindMap -> String
+asMindMapLatex m = let sStruct = asStructuredData (getMindMapName m) (getStructure m)
+                          in (template sStruct)
+
+printMindMapLatex :: MindMap -> IO ()
+printMindMapLatex m = putStrLn $ asMindMapLatex m
+
+printMindMap :: MindMap -> String
+printMindMap m = drawStruct (getStructure m)
+
+instance Show MindMap where
+  show = printMindMap
