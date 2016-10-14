@@ -12,6 +12,7 @@ import System.Process
 import System.Directory
 import Data.Char (toLower)
 import Data.Tree
+import qualified Data.Map as Map
 
 dasherize :: Inline -> String
 dasherize Space = "-"
@@ -25,6 +26,9 @@ readDoc s = case readOrg def s of
 
 writeDoc :: Pandoc -> String
 writeDoc = writeLaTeX def
+
+expandToLatex :: [Block] -> String
+expandToLatex b = writeDoc $ Pandoc (Meta Map.empty) b
 
 -- A bit like map but stops when f returns Nothing.
 takeWhile' :: ( a -> Bool ) -> [ a ] -> ([a], [a])

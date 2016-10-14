@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
-module MindMap.Print (drawMindMap, printMindMap, printMindMapLatex) where
+module MindMap.Print where
 
 import Text.Pandoc
 import Text.Pandoc.Error
@@ -17,36 +17,42 @@ import Data.Tree
 import MindMap.Data
 import Utils
 
-template dta = [i|
+template dta ann = [i|
 \\documentclass{article}
-\\usepackage{fontspec,xunicode,xltxtra}
-\\setmainfont[Scale=0.74]{Fira Sans Medium}
+\\usepackage{mathspec}
+\\setallmainfonts(Digits,Latin){Fira Sans Light}
 \\usepackage{tikz}
 \\usetikzlibrary{mindmap}
+\\providecommand{\\tightlist}{%
+\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}}
+  
 \\pagestyle{empty}
 \\begin{document}
+\\setlength\\abovedisplayskip{5pt}
+\\setlength\\belowdisplayskip{5pt}
+\\setlength\\abovedisplayshortskip{5pt}
+\\setlength\\belowdisplayshortskip{5pt}
+\\tikzstyle{every annotation}=[fill=white, thin, draw=black!20]
 \\begin{tikzpicture}[mindmap, grow cyclic, every node/.style=concept, concept color=orange!40,
     level 1/.append style={level distance=5cm,sibling angle=90},
     level 2/.append style={level distance=3cm,sibling angle=45},]
 #{dta};
+#{ann}
 \\end{tikzpicture}
 \\end{document}
 |]
-
-asLatex :: Pandoc -> String
-asLatex d = template $ writeDoc d
-
 
 drawStruct :: Structure -> String
 drawStruct t = drawTree (fmap f t) where 
    f (Concept idn nm mta c) = nm ++ "-" ++ (show mta) ++ " - " ++ (show c) 
 
+_m node key = Map.lookup key (getHeadingMeta $ rootLabel node)
 
-asStructuredData :: String -> Tree StructureLeaf -> String
-asStructuredData r node = 
-    let contents = concatMap (\x -> asStructuredData r x) (subForest node)
+getConceptNodes :: String -> Tree StructureLeaf -> String
+getConceptNodes r node = 
+    let contents = concatMap (\x -> getConceptNodes r x) (subForest node)
         identifier = getID $ rootLabel node
-        color = case Map.lookup "color" (getHeadingMeta $ rootLabel node) of
+        color = case (_m node "color") of
           (Just c) -> [i| color=#{c} |]
           _ -> ""
     in
@@ -55,6 +61,19 @@ asStructuredData r node =
   #{contents} |]
           else [i| child[concept #{color}] { node[concept] (#{identifier}) {#{getName $ rootLabel node}}
   #{contents}} |]
+
+getAnnotation node = expandToLatex (contents node)
+
+getAnnotations :: String -> Tree StructureLeaf -> String
+getAnnotations title node =
+  let cc = concatMap (\x -> getAnnotations title x) (subForest node)
+      identifier = getID $ rootLabel node
+      an = getAnnotation (rootLabel node)
+      in
+    if identifier /= "root" && an /= "" then 
+    [i|\\node[annotation, right] at (#{identifier}.east) {#{an}};
+#{cc}
+|] else cc
 
 draw :: String -> String -> IO ()
 draw name exp = do
@@ -66,12 +85,16 @@ draw name exp = do
     return ();
 
 drawMindMap :: String -> MindMap -> IO ()
-drawMindMap fn m = let sStruct = asStructuredData (getMindMapName m) (getStructure m)
+drawMindMap fn m = let sStruct = getConceptNodes (getMindMapName m) (getStructure m)
                        in draw fn $ asMindMapLatex m
 
 asMindMapLatex :: MindMap -> String
-asMindMapLatex m = let sStruct = asStructuredData (getMindMapName m) (getStructure m)
-                          in (template sStruct)
+asMindMapLatex m =
+  let name = getMindMapName m
+      struct = getStructure m
+      sStruct = getConceptNodes name struct
+      sAnn = getAnnotations name struct
+  in (template sStruct sAnn)
 
 printMindMapLatex :: MindMap -> IO ()
 printMindMapLatex m = putStrLn $ asMindMapLatex m
