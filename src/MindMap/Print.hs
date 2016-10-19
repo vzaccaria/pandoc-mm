@@ -19,7 +19,7 @@ import Data.Tree
 import MindMap.Data
 import Utils
 
-template dta ann = [i|
+template dta ann cann = [i|
 \\documentclass{article}
 \\usepackage{mathspec}
 \\setallmainfonts(Digits,Latin){Fira Sans Light}
@@ -28,22 +28,29 @@ template dta ann = [i|
 \\usetikzlibrary{positioning}
 \\providecommand{\\tightlist}{%
 \\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}}
-  
+\\usepackage{enumitem}
+\\setlist{leftmargin=3mm}
 \\pagestyle{empty}
 \\begin{document}
 \\setlength\\abovedisplayskip{5pt}
 \\setlength\\belowdisplayskip{5pt}
 \\setlength\\abovedisplayshortskip{5pt}
 \\setlength\\belowdisplayshortskip{5pt}
+\\pgfdeclarelayer{background}
+\\pgfsetlayers{background,main}  
 \\tikzstyle{every annotation}=[fill=white, thin, draw=black!20]
 \\begin{tikzpicture}[mindmap, grow cyclic, every node/.style=concept, concept color=orange!40,
     level 1/.append style={level distance=5cm,sibling angle=90},
     level 2/.append style={level distance=3cm,sibling angle=45},]
 #{dta};
-#{ann}
+#{ann};
+\\begin{pgfonlayer}{background}
+#{cann}\\end{pgfonlayer}
 \\end{tikzpicture}
 \\end{document}
 |]
+
+  
 
 drawStruct :: Structure -> String
 drawStruct t = drawTree (fmap f t) where 
@@ -65,7 +72,7 @@ getConceptNodes r node =
           else [i| child[concept #{color}] { node[concept] (#{identifier}) {#{getName $ rootLabel node}}
   #{contents}} |]
 
-getAnnotation node = expandToLatex (contents node)
+getAnnotationText node = expandToLatex (contents node)
 
 _get node d s =
   let v = fromMaybe d (_m node s)
@@ -127,24 +134,43 @@ toStringTuple _ = error "Invalid configuration!"
 getTuplePlacement :: String -> (String -> String)
 getTuplePlacement = toStringTuple . getPlacement
 
-getPosition node =
+getAnnotationPosition node =
   case _m node "placement" of
     Just v -> Just (getTuplePlacement v)
-    _ -> Nothing
+    _      -> Nothing
 
-getAnnotations :: String -> Tree StructureLeaf -> String
-getAnnotations title node =
-  let cc                          = concatMap (getAnnotations title) (subForest node)
-      identifier                  = getID $ rootLabel node
-      an                          = getAnnotation (rootLabel node)
+annotationName :: String -> String
+annotationName identifier = identifier ++ "-ann"
+
+getAnnotationsConnections :: Tree StructureLeaf -> String -> String
+getAnnotationsConnections node cc =
+  let identifier = getID $ rootLabel node
+      text       = getAnnotationText (rootLabel node)
   in
-    if identifier /= "root" && an /= ""
-    then
-      case getPosition node of
-        Just f -> [i|\\node[annotation, #{f(identifier)}] {#{an}}; #{cc} |]
-        _ -> [i|\\node[annotation] at (#{identifier}) {#{an}}; |]
-    else
-      cc
+    if identifier /= "root" && text /= ""
+      then [i|\\draw [concept connection] (#{identifier}) edge (#{annotationName(identifier)}); #{cc} |]
+      else cc
+
+
+nodeToAnnotation :: Tree StructureLeaf -> String -> String
+nodeToAnnotation node cc =
+  let identifier = getID $ rootLabel node
+      text       = getAnnotationText (rootLabel node)
+  in
+    if identifier /= "root" && text /= ""
+      then
+        case getAnnotationPosition node of
+          Just f -> [i|\\node[annotation, #{f(identifier)}]  (#{annotationName(identifier)}) {#{text}}; #{cc} |]
+          _      -> [i|\\node[annotation] at (#{identifier}) (#{annotationName(identifier)}) {#{text}}; #{cc} |]
+      else
+        cc
+
+mapAnnotations :: (Tree StructureLeaf -> String -> String) -> Tree StructureLeaf -> String
+mapAnnotations f node =
+  let cc = concatMap (mapAnnotations f) (subForest node)
+  in f node cc
+
+
 
 draw :: String -> String -> IO ()
 draw name exp = do
@@ -164,8 +190,9 @@ asMindMapLatex m =
   let name = getMindMapName m
       struct = getStructure m
       sStruct = getConceptNodes name struct
-      sAnn = getAnnotations name struct
-  in (template sStruct sAnn)
+      sAnn = mapAnnotations nodeToAnnotation struct
+      cAnn = mapAnnotations getAnnotationsConnections struct
+  in (template sStruct sAnn cAnn)
 
 printMindMapLatex :: MindMap -> IO ()
 printMindMapLatex m = putStrLn $ asMindMapLatex m
