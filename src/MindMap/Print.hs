@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 module MindMap.Print where
@@ -5,6 +6,7 @@ module MindMap.Print where
 import Text.Pandoc
 import Text.Pandoc.Error
 import Text.Pandoc.Walk (walk)
+import Data.Maybe
 import Debug.Trace
 import Data.List
 import qualified Data.Map as Map
@@ -23,6 +25,7 @@ template dta ann = [i|
 \\setallmainfonts(Digits,Latin){Fira Sans Light}
 \\usepackage{tikz}
 \\usetikzlibrary{mindmap}
+\\usetikzlibrary{positioning}
 \\providecommand{\\tightlist}{%
 \\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}}
   
@@ -64,23 +67,91 @@ getConceptNodes r node =
 
 getAnnotation node = expandToLatex (contents node)
 
+_get node d s =
+  let v = fromMaybe d (_m node s)
+  in case v of
+       "-" -> d
+       _ -> v
+
+data Direction' = North | South | East | West deriving (Show,Eq)
+data Direction = D (Direction', Integer) | NoDirection deriving (Show,Eq)
+type Placement = (Direction, Direction)
+
+pempty = (NoDirection, NoDirection)
+
+pmerge :: Placement -> Direction -> Placement
+pmerge x NoDirection = x
+pmerge (NoDirection, NoDirection) x = (x, NoDirection)
+
+pmerge (D (d1, n1), NoDirection) (D (dx, nx))
+  | d1 == dx = (D (d1, n1 + nx), NoDirection)
+  | otherwise = (D (d1, n1), D (dx, nx))
+  
+pmerge (D (d1, n1), D (d2, n2)) (D (dx, nx))
+   | d1 == dx = (D (d1, n1 + nx), D (d2, n2))
+   | d2 == dx = (D (d1, n1),      D (d2, n2 + nx))
+   | otherwise = error "Illegally specified placement - You can specify max 2 different placements"
+pmerge _ _ = error "!"
+
+getPlacement' :: Char -> Direction
+getPlacement' '<' = D (West, 1)
+getPlacement' '>' = D (East, 1)
+getPlacement' '^' = D (North, 1)
+getPlacement' 'V' = D (South, 1)
+getPlacement' _ = NoDirection
+
+getPlacement :: String -> Placement
+getPlacement s = let
+  dirs = map getPlacement' s
+  placement = foldl pmerge pempty dirs
+  in placement
+
+toStringTuple :: Placement -> (String -> String)
+toStringTuple (NoDirection, NoDirection)    = \x -> [i| right of=#{x}|]
+
+toStringTuple (D (North, n1), NoDirection)   = \x -> [i| above of=#{x}, node distance=#{n1}cm|]
+toStringTuple (D (South, n1), NoDirection)   = \x -> [i| below of=#{x}, node distance=#{n1}cm|]
+toStringTuple (D (East,  n1), NoDirection)   = \x -> [i| right of=#{x}, node distance=#{n1}cm|]
+toStringTuple (D (West,  n1), NoDirection)   = \x -> [i| left  of=#{x}, node distance=#{n1}cm|] 
+toStringTuple (D (North, n1), D (East,  n2)) = \x -> [i| above right of=#{x}, node distance=#{n1+n2}cm|]
+toStringTuple (D (North, n1), D (West,  n2)) = \x -> [i| above  left of=#{x}, node distance=#{n1+n2}cm|]
+toStringTuple (D (South, n1), D (East,  n2)) = \x -> [i| below right of=#{x}, node distance=#{n1+n2}cm|]
+toStringTuple (D (South, n1), D (West,  n2)) = \x -> [i| below  left of=#{x}, node distance=#{n1+n2}cm|]
+toStringTuple (D (East,  n1), D (North, n2)) = \x -> [i| above right of=#{x}, node distance=#{n1+n2}cm|]
+toStringTuple (D (East,  n1), D (South, n2)) = \x -> [i| below right of=#{x}, node distance=#{n1+n2}cm|]
+toStringTuple (D (West,  n1), D (North, n2)) = \x -> [i| above  left of=#{x}, node distance=#{n1+n2}cm|]
+toStringTuple (D (West,  n1), D (South, n2)) = \x -> [i| below  left of=#{x}, node distance=#{n1+n2}cm|]
+
+toStringTuple _ = error "Invalid configuration!"
+
+getTuplePlacement :: String -> (String -> String)
+getTuplePlacement = toStringTuple . getPlacement
+
+getPosition node =
+  case _m node "placement" of
+    Just v -> Just (getTuplePlacement v)
+    _ -> Nothing
+
 getAnnotations :: String -> Tree StructureLeaf -> String
 getAnnotations title node =
-  let cc = concatMap (\x -> getAnnotations title x) (subForest node)
-      identifier = getID $ rootLabel node
-      an = getAnnotation (rootLabel node)
-      in
-    if identifier /= "root" && an /= "" then 
-    [i|\\node[annotation, right] at (#{identifier}.east) {#{an}};
-#{cc}
-|] else cc
+  let cc                          = concatMap (getAnnotations title) (subForest node)
+      identifier                  = getID $ rootLabel node
+      an                          = getAnnotation (rootLabel node)
+  in
+    if identifier /= "root" && an /= ""
+    then
+      case getPosition node of
+        Just f -> [i|\\node[annotation, #{f(identifier)}] {#{an}}; #{cc} |]
+        _ -> [i|\\node[annotation] at (#{identifier}) {#{an}}; |]
+    else
+      cc
 
 draw :: String -> String -> IO ()
 draw name exp = do
     system "rm -rf .pandoc-mm";
     createDirectory ".pandoc-mm";
     writeFile ".pandoc-mm/mm.tex" $ exp;
-    system ("cd .pandoc-mm && xelatex mm.tex")
+    system ("cd .pandoc-mm && xelatex -shell-escape -interaction nonstopmode mm.tex")
     system ("pdfcrop .pandoc-mm/mm.pdf " ++ name);
     return ();
 

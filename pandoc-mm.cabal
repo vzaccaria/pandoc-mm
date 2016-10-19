@@ -24,3 +24,6 @@ executable pandoc-mm
                      , directory
                      , mtl
                      , containers
+                     , docopt
+                     , system-filepath
+                     , text
