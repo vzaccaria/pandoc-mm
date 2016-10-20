@@ -20,7 +20,7 @@ import MindMap.Data
 import Utils
 
 template dta ann cann = [i|
-\\documentclass{article}
+\\documentclass{standalone}
 \\usepackage{mathspec}
 \\setallmainfonts(Digits,Latin){Fira Sans Light}
 \\usepackage{tikz}
