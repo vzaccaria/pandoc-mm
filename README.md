@@ -5,7 +5,7 @@
 
 # Foreword
 
-This is just a tiny wrapper built on [the shoulder of a giant](https://github.com/jgm/pandoc). 
+This is just a tiny wrapper built on [the shoulders of a giant](https://github.com/jgm/pandoc). 
 
 # Example 
 
