@@ -22,7 +22,11 @@ import Utils
 template dta ann cann = [i|
 \\documentclass{standalone}
 \\usepackage{mathspec}
-\\setallmainfonts(Digits,Latin){Fira Sans Light}
+\\usepackage{fancyvrb}
+\\usepackage{etoolbox}
+\\usepackage{relsize}
+\\setallmainfonts(Digits,Latin){Fira Sans Light} 
+\\setmonofont{Envy Code R}
 \\usepackage{tikz}
 \\usetikzlibrary{mindmap}
 \\usetikzlibrary{positioning}
@@ -38,7 +42,7 @@ template dta ann cann = [i|
 \\setlength\\belowdisplayshortskip{5pt}
 \\pgfdeclarelayer{background}
 \\pgfsetlayers{background,main}  
-\\tikzstyle{every annotation}=[fill=white, thin, draw=black!20]
+\\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
 \\begin{tikzpicture}[mindmap, grow cyclic, every node/.style=concept, concept color=orange!40,
     level 1/.append style={level distance=5cm,sibling angle=90},
     level 2/.append style={level distance=3cm,sibling angle=45},]
