@@ -25,11 +25,13 @@ template dta ann cann = [i|
 \\usepackage{fancyvrb}
 \\usepackage{etoolbox}
 \\usepackage{relsize}
+\\usepackage{hyperref}
 \\setallmainfonts(Digits,Latin){Fira Sans Light} 
 \\setmonofont{Envy Code R}
 \\usepackage{tikz}
 \\usetikzlibrary{mindmap}
-\\usetikzlibrary{positioning}
+\\usetikzlibrary{positioning}   
+\\usetikzlibrary{snakes}
 \\providecommand{\\tightlist}{%
 \\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}}
 \\usepackage{enumitem}
@@ -45,7 +47,9 @@ template dta ann cann = [i|
 \\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
 \\begin{tikzpicture}[mindmap, grow cyclic, every node/.style=concept, concept color=orange!40,
     level 1/.append style={level distance=5cm,sibling angle=90},
-    level 2/.append style={level distance=3cm,sibling angle=45},]
+    level 2/.append style={level distance=3cm,sibling angle=45},
+    concept connection/.append style={opacity=0.3},
+    ]
 #{dta};
 #{ann};
 \\begin{pgfonlayer}{background}
@@ -118,8 +122,7 @@ getPlacement s = let
   in placement
 
 toStringTuple :: Placement -> (String -> String)
-toStringTuple (NoDirection, NoDirection)    = \x -> [i| right of=#{x}|]
-
+toStringTuple (NoDirection, NoDirection)     = \x -> [i| right of=#{x}, node distance=5cm|]
 toStringTuple (D (North, n1), NoDirection)   = \x -> [i| above of=#{x}, node distance=#{n1}cm|]
 toStringTuple (D (South, n1), NoDirection)   = \x -> [i| below of=#{x}, node distance=#{n1}cm|]
 toStringTuple (D (East,  n1), NoDirection)   = \x -> [i| right of=#{x}, node distance=#{n1}cm|]
@@ -138,10 +141,12 @@ toStringTuple _ = error "Invalid configuration!"
 getTuplePlacement :: String -> (String -> String)
 getTuplePlacement = toStringTuple . getPlacement
 
+getAnnotationPosition
+  :: Tree StructureLeaf -> (String -> String)
 getAnnotationPosition node =
   case _m node "placement" of
-    Just v -> Just (getTuplePlacement v)
-    _      -> Nothing
+    Just v -> (getTuplePlacement v)
+    _      -> (getTuplePlacement "")
 
 annotationName :: String -> String
 annotationName identifier = identifier ++ "-ann"
@@ -160,12 +165,11 @@ nodeToAnnotation :: Tree StructureLeaf -> String -> String
 nodeToAnnotation node cc =
   let identifier = getID $ rootLabel node
       text       = getAnnotationText (rootLabel node)
+      f          = getAnnotationPosition node
   in
     if identifier /= "root" && text /= ""
       then
-        case getAnnotationPosition node of
-          Just f -> [i|\\node[annotation, #{f(identifier)}]  (#{annotationName(identifier)}) {#{text}}; #{cc} |]
-          _      -> [i|\\node[annotation] at (#{identifier}) (#{annotationName(identifier)}) {#{text}}; #{cc} |]
+        [i|\\node[annotation, #{f(identifier)}]  (#{annotationName(identifier)}) {#{text}}; #{cc} |]
       else
         cc
 

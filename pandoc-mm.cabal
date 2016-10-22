@@ -1,14 +1,14 @@
 name:                pandoc-mm
 version:             0.1.0.0
-synopsis:            Simple project template from stack
+synopsis:            Generate a mindmap from an org-mode file, complete with latex annotations
 description:         Please see README.md
-homepage:            https://github.com/githubuser/pandoc-mm#readme
+homepage:            https://github.com/vzaccaria/pandoc-mm
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2016 Author name here
-category:            Web
+author:              Vittorio Zaccaria
+maintainer:          vittorio.zaccaria@gmail.com
+copyright:           2016 - Vittorio Zaccaria
+category:            Productivity
 build-type:          Simple
 cabal-version:       >=1.10
 
