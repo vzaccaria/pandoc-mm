@@ -3,6 +3,10 @@
 
 > Generate a mindmap from an org-mode file. Complete with annotations.
 
+# Foreword
+
+This is just a tiny wrapper built on [the shoulder of a giant](https://github.com/jgm/pandoc). 
+
 # Example 
 
 Generate this:
