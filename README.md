@@ -7,7 +7,7 @@
 
 Generate this:
 
-[![image][./examples/Category.png]]
+![image](./examples/Category.png)
 
 from this:
 
