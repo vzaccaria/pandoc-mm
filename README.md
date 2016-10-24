@@ -1,13 +1,16 @@
-
-# Pandoc-mm
+Pandoc-mm
+=========
 
 > Generate a mindmap from an org-mode file. Complete with annotations.
 
-# Foreword
+Foreword
+========
 
-This is just a tiny wrapper built on [the shoulders of a giant](https://github.com/jgm/pandoc). 
+This is just a tiny wrapper built on [the shoulders of a
+giant](https://github.com/jgm/pandoc).
 
-# Example 
+Example
+=======
 
 Generate this:
 
@@ -59,29 +62,62 @@ function \[ M \times S \rightarrow S \]
 It is equivalent to an automata
 ```
 
-# Usage
+Installation
+============
 
-```
-    pandoc-mm FILE [ -x ]
-    pandoc-mm --help | -h
-    pandoc-mm --version
+I'd strongly suggest to install it through
+[Stack](https://docs.haskellstack.org/en/stable/README/):
 
-Options:
-    -x, --latex            Output raw latex
-    -h, --help             Show help
-    --version              Show version.
-
-Arguments
-    FILE                   Org file containing the mindmap
+``` sh
+git clone https://github.com/vzaccaria/pandoc-mm.git
+cd pandoc-mm 
+stack install .
 ```
 
-Without the `-x` option, it generates a pdf with xelatex and pdfcrop. Otherwise,
-it generates standalone latex you can compile with your own toolchain.
+This should compile the binary and put it into something reachable in
+your path. In my case this is `~/.local/bin`.
 
+Usage
+=====
 
-# Faq
+        pandoc-mm FILE [ -x ]
+        pandoc-mm --help | -h
+        pandoc-mm --version
 
-* Why? Just for fun.
-* What about markdown? PR welcome!
+    Options:
+        -x, --latex            Output raw latex
+        -h, --help             Show help
+        --version              Show version.
 
+    Arguments
+        FILE                   Org file containing the mindmap
+
+Without the `-x` option, it generates a pdf with xelatex and pdfcrop.
+Otherwise, it generates standalone latex you can compile with your own
+toolchain.
+
+Supported syntax
+================
+
+`:PROPERTIES:` can be the following:
+
+-   `:color:` is any color in a syntax understandable by
+    [Tikz](http://www.texample.net/tikz/). 
+-   `:placement:` this chooses the position of the annotation with
+    respect to the concept node, i.e.:
+
+    -   '\^': above
+    -   'V': below
+    -   '&lt;': left
+    -   '&gt;': right
+
+    You can use max two, non conflicting directions. The number of
+    symbols is used as distance; e.g.: `V>>>>` means
+    `below right, node distance 5cm`.
+
+Faq
+===
+
+-   Why? Just for fun.
+-   What about markdown? PR welcome!
 
