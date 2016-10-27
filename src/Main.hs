@@ -3,7 +3,7 @@
 
 module Main where
 
-import Prelude (($), Maybe(..), Bool(..), not, return, putStrLn, map, IO (..), readFile, (=<<))
+import Prelude (($), Maybe(..), Bool(..), not, return, putStrLn, map, IO (..), readFile, (=<<),(<$>), (>>=))
 import System.Environment (getArgs)
 import System.Console.Docopt.NoTH
 import System.Process

@@ -32,10 +32,16 @@ template dta ann cann = [i|
 \\usetikzlibrary{mindmap}
 \\usetikzlibrary{positioning}   
 \\usetikzlibrary{snakes}
-\\providecommand{\\tightlist}{%
-\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}}
 \\usepackage{enumitem}
+\\providecommand{\\tightlist}{%
+\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}
+}
+\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}
 \\setlist{leftmargin=3mm}
+\\setitemize{itemsep=1mm}
+\\let\\tempone\\itemize
+\\let\\temptwo\\enditemize
+\\renewenvironment{itemize}{\\tempone\\addtolength{\\itemsep}{0.5\\baselineskip}}{\\temptwo}
 \\pagestyle{empty}
 \\begin{document}
 \\setlength\\abovedisplayskip{5pt}
@@ -45,9 +51,11 @@ template dta ann cann = [i|
 \\pgfdeclarelayer{background}
 \\pgfsetlayers{background,main}  
 \\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
-\\begin{tikzpicture}[mindmap, grow cyclic, every node/.style=concept, concept color=orange!40,
+\\begin{tikzpicture}[mindmap, clockwise from=0, every node/.style=concept, concept color=orange!40,
     level 1/.append style={level distance=5cm,sibling angle=90},
-    level 2/.append style={level distance=3cm,sibling angle=45},
+    level 2/.append style={level distance=5cm,sibling angle=60},
+    level 3/.append style={level distance=5cm,sibling angle=60},
+    level 4/.append style={level distance=5cm,sibling angle=60},
     concept connection/.append style={opacity=0.3},
     ]
 #{dta};

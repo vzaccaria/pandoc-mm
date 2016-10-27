@@ -51,7 +51,13 @@ add x cs@(_:_) =
       (h,l) = last cs
   in i ++ [(h,l ++ [x])]
 add x [] =
-  error "Sorry, the document should begin with at least one top concept"
+  -- This might happen also when some meta info is present but with a blank value
+  -- Pandoc recognizes this as a paragraph and so it appears as some info outside concepts
+  -- final decision; change from:
+  -- error "Sorry, the document should begin with at least one top concept"
+  -- to
+  []
+  
 
 asDasherized :: [Inline] -> [Char]
 asDasherized = concatMap dasherize
