@@ -19,15 +19,36 @@ import Data.Tree
 import MindMap.Data
 import Utils
 
-template dta ann cann = [i|
+data PrintConfig  = P {
+  body        :: String,
+  annotations :: String,
+  connections :: String,
+  font        :: Maybe String,
+  monofont    :: Maybe String
+}
+
+template :: PrintConfig -> String
+template pc =
+  let
+    dta  = body pc
+    cann = connections pc
+    ann  = annotations pc
+    fnt = case (font pc) of
+      Nothing -> ""
+      (Just x) -> [i| \\setallmainfonts(Digits,Latin){#{x}} |]
+    mfnt = case (monofont pc) of
+      Nothing -> ""
+      (Just x) -> [i| \\setmonofont{#{x}} |]
+  in
+    [i|
 \\documentclass{standalone}
 \\usepackage{mathspec}
 \\usepackage{fancyvrb}
 \\usepackage{etoolbox}
 \\usepackage{relsize}
 \\usepackage{hyperref}
-\\setallmainfonts(Digits,Latin){Fira Sans Light} 
-\\setmonofont{Envy Code R}
+#{fnt}
+#{mfnt}
 \\usepackage{tikz}
 \\usetikzlibrary{mindmap}
 \\usetikzlibrary{positioning}   
@@ -183,8 +204,10 @@ nodeToAnnotation node cc =
 
 mapAnnotations :: (Tree StructureLeaf -> String -> String) -> Tree StructureLeaf -> String
 mapAnnotations f node =
-  let cc = concatMap (mapAnnotations f) (subForest node)
-  in f node cc
+  let
+    cc = concatMap (mapAnnotations f) (subForest node)
+  in
+    f node cc
 
 
 
@@ -202,12 +225,16 @@ drawMindMap fn m = draw fn $ asMindMapLatex m
 
 asMindMapLatex :: MindMap -> String
 asMindMapLatex m =
-  let name = getMindMapName m
-      struct = getStructure m
-      sStruct = getConceptNodes name struct
-      sAnn = mapAnnotations nodeToAnnotation struct
-      cAnn = mapAnnotations getAnnotationsConnections struct
-  in (template sStruct sAnn cAnn)
+  let
+      name    = getMindMapName m
+      struct  = getStructure m
+      cfg = P
+        (getConceptNodes name struct)
+        (mapAnnotations nodeToAnnotation struct)
+        (mapAnnotations getAnnotationsConnections struct)
+        (otherMeta m "font")
+        (otherMeta m "monofont")
+  in template cfg
 
 printMindMapLatex :: MindMap -> IO ()
 printMindMapLatex m = putStrLn $ asMindMapLatex m

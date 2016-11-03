@@ -22,6 +22,8 @@ from this:
 #+TITLE: Category Theory
 #+AUTHOR: Vittorio Zaccaria
 #+COLUMNS: %20ITEM %10color %10placement 
+#+FONT: Fira Sans
+#+MONOFONT: Inconsolata
 
 * Category
 :PROPERTIES:

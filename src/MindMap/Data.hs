@@ -30,13 +30,14 @@ type Structure = Tree StructureLeaf
 type SubStructures = Forest StructureLeaf
 
 data MindMap =
-  M {getMapName :: Maybe [Inline]
-    ,getAuthor :: Maybe [Inline]
-    ,getStructure :: Structure}
+  M {getMapName :: Maybe String
+    ,getAuthor :: Maybe String
+    ,getStructure :: Structure
+    ,otherMeta :: String -> Maybe String }
 
 getMindMapName :: MindMap -> String
-getMindMapName (M (Just n) _ _) = asPlainString n
-getMindMapName (M _ _ _) = "No name"
+getMindMapName (M (Just n) _ _ _) = n
+getMindMapName (M _ _ _ _) = "No name"
 
 type Chunk = (Block,[Block])
 
@@ -103,12 +104,12 @@ getChunks :: Pandoc -> [Chunk]
 getChunks (Pandoc _ bs) = foldl (flip add) [] bs
 
 parseMindMap :: Pandoc -> MindMap
-parseMindMap x@(Pandoc meta blocks) =
+parseMindMap x@(Pandoc meta _) =
   M (getMV "title")
     (getMV "author")
     (parseChunks $ getChunks x)
+    getMV
   where getMV k =
-          case Map.lookup k
-                          (unMeta meta) of
-            Just (MetaInlines i) -> Just i
+          case Map.lookup k (unMeta meta) of
+            Just (MetaInlines i) -> Just $ asPlainString  i
             _ -> Nothing
