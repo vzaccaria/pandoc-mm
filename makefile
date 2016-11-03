@@ -2,7 +2,7 @@
 all: examples/Category.png
 
 examples/%.pdf: examples/%.org
-	stack exec pandoc-mm -- $<
+	stack exec pandoc-mm -- -x $<
 	mv $*.pdf examples
 
 examples/%.png: examples/%.pdf makefile

@@ -198,8 +198,7 @@ draw name exp = do
     return ();
 
 drawMindMap :: String -> MindMap -> IO ()
-drawMindMap fn m = let sStruct = getConceptNodes (getMindMapName m) (getStructure m)
-                       in draw fn $ asMindMapLatex m
+drawMindMap fn m = draw fn $ asMindMapLatex m
 
 asMindMapLatex :: MindMap -> String
 asMindMapLatex m =

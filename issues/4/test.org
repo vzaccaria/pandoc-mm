@@ -1,0 +1,11 @@
+
+#+COLUMNS: %10color %10placement
+
+* Category
+:PROPERTIES:
+:color: red
+
+:placement: VV
+:END:
+
+

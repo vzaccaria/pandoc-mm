@@ -17,6 +17,10 @@ import MindMap.Data
 import MindMap.Print
 import Utils
 
+testIssue n = do
+  f <- readFile $ "./issues/" ++ (show n) ++ "/Category.org"
+  return $ readDoc f
+
 
 test :: IO Pandoc
 test = do
