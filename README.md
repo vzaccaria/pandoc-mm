@@ -115,6 +115,29 @@ Supported syntax
     symbols is used as distance; e.g.: `V>>>>` means
     `below right, node distance 5cm`.
 
+*Warning*: it turns out that the official org-mode grammar does not accept spaces between properties, or between properties and headings. These are thus invalid headings:
+
+```
+* Category
+
+:PROPERTIES:
+:color: blue!30
+:placement: ^^^
+:END:       
+```
+
+or:
+```
+* Category
+:PROPERTIES:
+:color: blue!30
+
+:placement: ^^^
+:END:       
+```
+
+
+
 Faq
 ===
 
