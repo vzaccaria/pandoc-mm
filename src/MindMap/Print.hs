@@ -73,21 +73,21 @@ template pc =
 \\pgfsetlayers{background,main}  
 \\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
 \\begin{tikzpicture}[mindmap, clockwise from=0, every node/.style=concept, concept color=orange!40,
-    level 1/.append style={level distance=5cm,sibling angle=90},
-    level 2/.append style={level distance=5cm,sibling angle=60},
-    level 3/.append style={level distance=5cm,sibling angle=60},
-    level 4/.append style={level distance=5cm,sibling angle=60},
     concept connection/.append style={opacity=0.3},
     ]
 #{dta};
 #{ann};
-\\begin{pgfonlayer}{background}
+\\begin{pgfonlayer}{background} 
 #{cann}\\end{pgfonlayer}
 \\end{tikzpicture}
 \\end{document}
 |]
 
   
+-- level 1/.append style={level distance=5cm,sibling angle=90},
+-- level 2/.append style={level distance=5cm,sibling angle=60},
+-- level 3/.append style={level distance=5cm,sibling angle=60},
+-- level 4/.append style={level distance=5cm,sibling angle=60},
 
 drawStruct :: Structure -> String
 drawStruct t = drawTree (fmap f t) where 
@@ -106,7 +106,7 @@ getConceptNodes r node =
         if identifier == "root"
           then [i| \\node{#{r}}
   #{contents} |]
-          else [i| child[concept #{color}] { node[concept] (#{identifier}) {#{getName $ rootLabel node}}
+          else [i| child[concept #{color}] { node[concept, name=#{identifier}] {#{getName $ rootLabel node}}   
   #{contents}} |]
 
 getAnnotationText node = expandToLatex (contents node)

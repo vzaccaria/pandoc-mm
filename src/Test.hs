@@ -24,7 +24,7 @@ testIssue n = do
 
 test :: IO Pandoc
 test = do
-  f <- readFile "Category.org";
+  f <- readFile "./examples/Category.org";
   return $ readDoc f
 
 testmm :: IO MindMap
