@@ -1,5 +1,5 @@
 
-all: examples/Category.png README.md
+all: examples/Category.png README.md examples/Category.pdf
 
 SRC=\
 	src/Main.hs \
@@ -26,3 +26,5 @@ README.md: templates/readme.markdown examples/Category.org
 	example=`cat examples/Category.org` envsubst < templates/readme.markdown > ./README.md
 
 
+clean:
+	rm -f README.md examples/*.pdf examples/*.png
