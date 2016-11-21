@@ -42,7 +42,7 @@ template pc =
       Nothing -> ""
       (Just x) -> [i| \\setmonofont{#{x}} |]
     hl = case (helpLines pc) of
-      Just x -> [i|\\draw [help lines] #{x}; |]
+      Just x -> [i|\\draw #{x}; |]
       Nothing -> ""
   in
     [i|
@@ -85,7 +85,7 @@ getConceptNodes r node =
           _ -> ""
     in
         if identifier == "root"
-          then [i| \\node{#{r}}
+          then [i| \\node[concept] {#{r}}
   #{contents} |]
           else [i| child[concept #{color}] { node[concept, name=#{identifier}] {#{getName $ rootLabel node}}
   #{contents}} |]

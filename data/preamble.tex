@@ -29,3 +29,28 @@
 \pgfdeclarelayer{background}
 \pgfsetlayers{background,main}
 \tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
+
+\makeatletter
+\def\tikz@Get@x@coor#1,#2\tikz@sentinel{%
+  \pgfmathparse{int(round(#1/1cm))}}
+\def\tikz@Get@y@coor#1,#2\tikz@sentinel{%
+  \pgfmathparse{int(round(#2/1cm))}}
+\tikzset{%
+  show grid integer coordinates/.style = {%
+    decoration = {%
+      show path construction,
+      moveto code = {%
+        \expandafter\tikz@Get@x@coor\tikzinputsegmentfirst\tikz@sentinel
+        \edef\tikz@tempa{\pgfmathresult}%
+        \expandafter\tikz@Get@x@coor\tikzinputsegmentlast\tikz@sentinel
+        \edef\tikz@tempb{\pgfmathresult}%
+        \pgfmathparse{equal(\tikz@tempa,\tikz@tempb)}%
+        \ifnum\pgfmathresult=1\relax
+        \node[anchor=north] at (\tikzinputsegmentfirst) {%
+          \tikz@tempa};
+        \else
+        \node[anchor=east] at (\tikzinputsegmentfirst) {%
+          \expandafter\tikz@Get@y@coor\tikzinputsegmentfirst\tikz@sentinel
+          \pgfmathresult};
+        \fi}},
+    postaction = decorate}}

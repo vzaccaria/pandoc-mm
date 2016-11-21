@@ -19,59 +19,7 @@ Generate this:
 from this:
 
 ``` org
-
-#+TITLE: Category Theory
-#+AUTHOR: Vittorio Zaccaria
-#+COLUMNS: %20ITEM %10color %10placement 
-#+FONT: Fira Sans 
-#+MONOFONT: Inconsolata
-#+HELPLINES: [show grid integer coordinates, thin] (-8,-8) grid (8,8) 
-
-
-
-* Category
-:PROPERTIES:
-:color: blue!30
-:placement: 18,0
-:END:       
-
-A triple $\mathcal{C}(O, M, \bullet)$ where 
-
-- $\forall o \in O, \exists id_o \in M$
-- $\bullet$ is defined for all connected objects 
-- $\bullet(A \rightarrow B, B \rightarrow C) = A \rightarrow C$
-- $(f \bullet g) \bullet h == f \bullet (h \bullet g)$ 
-- $id_x \bullet f = f \bullet id_y$
-
-** Monoid 
-:PROPERTIES:
-:END:
-
-
-*** Free Monoid 
-:PROPERTIES:
-:END:
-
-A free monoid of M is just a monoid $\mathcal{M}(List[M], [], ++)$. 
-
-*** Free Monoid 
-:PROPERTIES:
-:placement: 15, -5
-:END:
-
-A free monoid of M is just a monoid $\mathcal{M}(List[M], [], ++)$. 
-
-*** Action 
-:PROPERTIES:
-:END:
-
-An action of a $\mathcal{M}(M, id_0, \star)$ over a set $S$ of states is a
-function \[ M \times S \rightarrow S \]
-
-It is equivalent to an automata
-* Functors
-** Bi-functors
-* Natural Transformations
+$example
 ```
 
 Installation

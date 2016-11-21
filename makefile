@@ -1,5 +1,5 @@
 
-all: examples/Category.png
+all: examples/Category.png README.md
 
 SRC=\
 	src/Main.hs \
@@ -21,5 +21,8 @@ examples/%.pdf: examples/%.org $(BIN)
 
 examples/%.png: examples/%.pdf makefile 
 	convert -density 300 -quality 200 -delete 1--1 $< $@
+
+README.md: templates/readme.markdown examples/Category.org
+	example=`cat examples/Category.org` envsubst < templates/readme.markdown > ./README.md
 
 
