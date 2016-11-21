@@ -25,7 +25,7 @@ from this:
 #+COLUMNS: %20ITEM %10color %10placement 
 #+FONT: Fira Sans 
 #+MONOFONT: Inconsolata
-#+HELPLINES: [show grid integer coordinates, thin] (-8,-8) grid (8,8) 
+# #+HELPLINES: [show grid integer coordinates, thin] (-8,-8) grid (8,8) 
 
 
 
