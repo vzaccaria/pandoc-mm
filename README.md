@@ -58,6 +58,10 @@ An action of a $\mathcal{M}(M, id_0, \star)$ over a set $S$ of states is a
 function \[ M \times S \rightarrow S \]
 
 It is equivalent to an automata
+
+* Foo
+** bar
+* Test
 ```
 
 Installation
