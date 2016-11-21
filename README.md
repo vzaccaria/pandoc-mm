@@ -19,15 +19,20 @@ Generate this:
 from this:
 
 ``` org
+
 #+TITLE: Category Theory
 #+AUTHOR: Vittorio Zaccaria
-#+COLUMNS: %20ITEM %10color 
-#+FONT: Fira Sans
+#+COLUMNS: %20ITEM %10color %10placement 
+#+FONT: Fira Sans 
 #+MONOFONT: Inconsolata
+# #+HELPLINES: (0,0) grid (20, -10)
+
+
 
 * Category
 :PROPERTIES:
 :color: blue!30
+:placement: 18,0
 :END:       
 
 A triple $\mathcal{C}(O, M, \bullet)$ where 
@@ -42,10 +47,16 @@ A triple $\mathcal{C}(O, M, \bullet)$ where
 :PROPERTIES:
 :END:
 
-A monoid $\mathcal{M}(M, id_0, \star)$ is just a category $\mathcal{C}(O, M, \star)$ where O = { o_1 }
 
 *** Free Monoid 
 :PROPERTIES:
+:END:
+
+A free monoid of M is just a monoid $\mathcal{M}(List[M], [], ++)$. 
+
+*** Free Monoid 
+:PROPERTIES:
+:placement: 15, -5
 :END:
 
 A free monoid of M is just a monoid $\mathcal{M}(List[M], [], ++)$. 
@@ -58,10 +69,10 @@ An action of a $\mathcal{M}(M, id_0, \star)$ over a set $S$ of states is a
 function \[ M \times S \rightarrow S \]
 
 It is equivalent to an automata
+* Functors
+** Bi-functors
+* Natural Transformations
 
-* Foo
-** bar
-* Test
 ```
 
 Installation
@@ -105,6 +116,8 @@ Supported syntax
 
 -   `:color:` is any color in a syntax understandable by
     [Tikz](http://www.texample.net/tikz/). 
+    
+- `:placement:` absolute coordinates of the annotation. If not present, *i*) it is assumed to be placed below the previous annotation or *ii)* if it is the first annotation then it is assumed to be `current page.south east`.
 
 
 *Warning*: it turns out that the official org-mode grammar does not accept spaces between properties, or between properties and headings. These are thus invalid headings:

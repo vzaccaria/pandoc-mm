@@ -1,30 +1,30 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 module MindMap.Print where
 
-import Text.Pandoc
-import Text.Pandoc.Error
-import Text.Pandoc.Walk (walk)
-import Data.Maybe
-import Debug.Trace
-import Data.List
-import qualified Data.Map as Map
-import Data.String.Interpolate
-import System.Process
-import System.Directory
-import Data.Char (toLower)
-import Data.Tree
+import           Data.Char               (toLower)
+import           Data.List
+import qualified Data.Map                as Map
+import           Data.Maybe
+import           Data.String.Interpolate
+import           Data.Tree
+import           Debug.Trace
+import           System.Directory
+import           System.Process
+import           Text.Pandoc
+import           Text.Pandoc.Error
+import           Text.Pandoc.Walk        (walk)
 
-import MindMap.Data
-import Utils
+import           MindMap.Data
+import           Utils
 
 data PrintConfig  = P {
   body        :: String,
   annotations :: String,
   connections :: String,
   font        :: Maybe String,
-  monofont    :: Maybe String
+  monofont    :: Maybe String,
+  helpLines   :: Maybe String
 }
 
 template :: PrintConfig -> String
@@ -39,6 +39,9 @@ template pc =
     mfnt = case (monofont pc) of
       Nothing -> ""
       (Just x) -> [i| \\setmonofont{#{x}} |]
+    hl = case (helpLines pc) of
+      Just x -> [i|\\draw [help lines] #{x}; |]
+      Nothing -> ""
   in
     [i|
 \\documentclass{standalone}
@@ -51,7 +54,7 @@ template pc =
 #{mfnt}
 \\usepackage{tikz}
 \\usetikzlibrary{mindmap}
-\\usetikzlibrary{positioning}   
+\\usetikzlibrary{positioning}
 \\usetikzlibrary{snakes}
 
 \\usepackage{enumitem}
@@ -65,40 +68,41 @@ template pc =
 \\setlist[itemize]{itemsep=1mm, topsep=0pt}
 \\pagestyle{empty}
 \\begin{document}
+
 \\setlength\\abovedisplayskip{5pt}
 \\setlength\\belowdisplayskip{5pt}
 \\setlength\\abovedisplayshortskip{5pt}
 \\setlength\\belowdisplayshortskip{5pt}
 
-
 \\pgfdeclarelayer{background}
-\\pgfsetlayers{background,main}  
+\\pgfsetlayers{background,main}
 \\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
-\\begin{tikzpicture}[mindmap, clockwise from=0, every node/.style=concept, concept color=orange!40,
-    concept connection/.append style={opacity=0.3},
+\\begin{tikzpicture}[large mindmap, clockwise from=0, every node/.style=concept, concept color=orange!40,
+    concept connection/.append style={opacity=0.3}, remember picture
     ]
 #{dta};
 #{ann};
-\\begin{pgfonlayer}{background} 
+#{hl}
+\\begin{pgfonlayer}{background}
 #{cann}\\end{pgfonlayer}
 \\end{tikzpicture}
 \\end{document}
 |]
 
-  
+
 -- level 1/.append style={level distance=5cm,sibling angle=90},
 -- level 2/.append style={level distance=5cm,sibling angle=60},
 -- level 3/.append style={level distance=5cm,sibling angle=60},
 -- level 4/.append style={level distance=5cm,sibling angle=60},
 
 drawStruct :: Structure -> String
-drawStruct t = drawTree (fmap f t) where 
-   f (Concept idn _ nm mta c) = nm ++ "-" ++ (show mta) ++ " - " ++ (show c) 
+drawStruct t = drawTree (fmap f t) where
+   f (Concept idn _ nm mta c) = nm ++ "-" ++ (show mta) ++ " - " ++ (show c)
 
 _m node key = Map.lookup key (getHeadingMeta $ rootLabel node)
 
 getConceptNodes :: String -> Tree StructureLeaf -> String
-getConceptNodes r node = 
+getConceptNodes r node =
     let contents = concatMap (\x -> getConceptNodes r x) (subForest node)
         identifier = getID $ rootLabel node
         color = case (_m node "color") of
@@ -108,7 +112,7 @@ getConceptNodes r node =
         if identifier == "root"
           then [i| \\node{#{r}}
   #{contents} |]
-          else [i| child[concept #{color}] { node[concept, name=#{identifier}] {#{getName $ rootLabel node}}   
+          else [i| child[concept #{color}] { node[concept, name=#{identifier}] {#{getName $ rootLabel node}}
   #{contents}} |]
 
 getAnnotationText node = expandToLatex (contents node)
@@ -134,18 +138,22 @@ getAnnotationsConnections node cc =
 
 nodeToAnnotation :: Tree StructureLeaf -> String -> String
 nodeToAnnotation node cc =
-  let identifier = getID $ rootLabel node -- e.g. "free-monoid-1"  
+  let identifier = getID $ rootLabel node -- e.g. "free-monoid-1"
       uid        = getUID $ rootLabel node
       name       = getName $ rootLabel node
       uid'       = uid - 1
       text       = getAnnotationText (rootLabel node) -- Latex content of node
+      placement  = _m node "placement"
   in
     if identifier /= "root"
       then
-        if text /= ""
-        then
-          [i|\n\\node[annotation, below of=ann-#{show uid'}, anchor=north, yshift=-.5cm]  (ann-#{show uid}) {\\textbf{#{name}}:\\\\#{text}};#{cc} |]
-          else
+        if text /= "" then
+          let nextpos = [i|, below of=ann-#{show uid'}|]
+          in
+             case placement of
+                      Nothing -> [i|\n\\node[annotation, #{nextpos}, anchor=north, yshift=-.5cm]  (ann-#{show uid}) {\\textbf{#{name}}:\\\\#{text}};#{cc} |]
+                      Just p -> [i|\n\\node[annotation]  (ann-#{show uid}) at (#{p}) {\\textbf{#{name}}:\\\\#{text}};#{cc} |]
+            else
           [i|\n\\node[annotation, below of=ann-#{show uid'}, anchor=north]  (ann-#{show uid}) {};#{cc} |]
       else
         [i|\n\\node[annotation]  (ann-1) at (current page.south east) {};#{cc} |]
@@ -182,6 +190,7 @@ asMindMapLatex m =
         (mapAnnotations getAnnotationsConnections struct)
         (otherMeta m "font")
         (otherMeta m "monofont")
+        (otherMeta m "helplines")
   in template cfg
 
 printMindMapLatex :: MindMap -> IO ()
