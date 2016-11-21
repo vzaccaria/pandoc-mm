@@ -11,11 +11,15 @@ copyright:           2016 - Vittorio Zaccaria
 category:            Productivity
 build-type:          Simple
 cabal-version:       >=1.10
+data-dir: .
+data-files: ./data/preamble.tex
+          , ./data/tikz_preamble.tex
 
 executable pandoc-mm
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
+  other-modules:       Paths_pandoc_mm
   build-depends:       base >= 4.7 && < 5
                      , pandoc
                      , pandoc-types

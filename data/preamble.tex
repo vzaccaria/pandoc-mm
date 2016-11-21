@@ -1,0 +1,31 @@
+
+\documentclass{standalone}
+\usepackage{mathspec}
+\usepackage{fancyvrb}
+\usepackage{etoolbox}
+\usepackage{relsize}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{mindmap}
+\usetikzlibrary{positioning}
+\usetikzlibrary{snakes}
+
+\usepackage{enumitem}
+
+\providecommand{\tightlist}{%
+\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+}
+\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+
+\setlist{leftmargin=3mm}
+\setlist[itemize]{itemsep=1mm, topsep=0pt}
+\pagestyle{empty}
+
+\setlength\abovedisplayskip{5pt}
+\setlength\belowdisplayskip{5pt}
+\setlength\abovedisplayshortskip{5pt}
+\setlength\belowdisplayshortskip{5pt}
+
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]

@@ -14,17 +14,19 @@ import           System.Process
 import           Text.Pandoc
 import           Text.Pandoc.Error
 import           Text.Pandoc.Walk        (walk)
-
 import           MindMap.Data
 import           Utils
+import Paths_pandoc_mm
 
 data PrintConfig  = P {
-  body        :: String,
-  annotations :: String,
-  connections :: String,
-  font        :: Maybe String,
-  monofont    :: Maybe String,
-  helpLines   :: Maybe String
+  body         :: String,
+  annotations  :: String,
+  connections  :: String,
+  font         :: Maybe String,
+  monofont     :: Maybe String,
+  helpLines    :: Maybe String,
+  preamble     :: String,
+  tikzpreamble :: String
 }
 
 template :: PrintConfig -> String
@@ -44,47 +46,20 @@ template pc =
       Nothing -> ""
   in
     [i|
-\\documentclass{standalone}
-\\usepackage{mathspec}
-\\usepackage{fancyvrb}
-\\usepackage{etoolbox}
-\\usepackage{relsize}
-\\usepackage{hyperref}
+#{preamble pc}
+
 #{fnt}
 #{mfnt}
-\\usepackage{tikz}
-\\usetikzlibrary{mindmap}
-\\usetikzlibrary{positioning}
-\\usetikzlibrary{snakes}
 
-\\usepackage{enumitem}
-
-\\providecommand{\\tightlist}{%
-\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}
-}
-\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}
-
-\\setlist{leftmargin=3mm}
-\\setlist[itemize]{itemsep=1mm, topsep=0pt}
-\\pagestyle{empty}
 \\begin{document}
+#{tikzpreamble pc}
 
-\\setlength\\abovedisplayskip{5pt}
-\\setlength\\belowdisplayskip{5pt}
-\\setlength\\abovedisplayshortskip{5pt}
-\\setlength\\belowdisplayshortskip{5pt}
-
-\\pgfdeclarelayer{background}
-\\pgfsetlayers{background,main}
-\\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
-\\begin{tikzpicture}[large mindmap, clockwise from=0, every node/.style=concept, concept color=orange!40,
-    concept connection/.append style={opacity=0.3}, remember picture
-    ]
 #{dta};
 #{ann};
 #{hl};
 \\begin{pgfonlayer}{background}
-#{cann}\\end{pgfonlayer}
+#{cann}
+\\end{pgfonlayer}
 \\end{tikzpicture}
 \\end{document}
 |]
@@ -176,11 +151,21 @@ draw name exp = do
     system ("pdfcrop .pandoc-mm/mm.pdf " ++ name);
     return ();
 
-drawMindMap :: String -> MindMap -> IO ()
-drawMindMap fn m = draw fn $ asMindMapLatex m
+readPreambles :: IO (String, String)
+readPreambles = do
+  preambleName <- getDataFileName "data/preamble.tex";
+  tikzPreambleName <- getDataFileName "data/tikz_preamble.tex";
+  latexPreamble <- readFile preambleName;  
+  tikzPreamble <- readFile tikzPreambleName;
+  return (latexPreamble, tikzPreamble)
 
-asMindMapLatex :: MindMap -> String
-asMindMapLatex m =
+drawMindMap :: String -> MindMap -> IO ()
+drawMindMap fn m = do
+  (latexPreamble, tikzPreamble) <- readPreambles 
+  draw fn $ asMindMapLatex m latexPreamble tikzPreamble
+
+asMindMapLatex :: MindMap -> String -> String -> String
+asMindMapLatex m latexPreamble tikzPreamble =
   let
       name    = getMindMapName m
       struct  = getStructure m
@@ -191,10 +176,14 @@ asMindMapLatex m =
         (otherMeta m "font")
         (otherMeta m "monofont")
         (otherMeta m "helplines")
+        latexPreamble
+        tikzPreamble
   in template cfg
 
 printMindMapLatex :: MindMap -> IO ()
-printMindMapLatex m = putStrLn $ asMindMapLatex m
+printMindMapLatex m = do
+  (latexPreamble, tikzPreamble) <- readPreambles 
+  putStrLn $ asMindMapLatex m latexPreamble tikzPreamble
 
 printMindMap :: MindMap -> String
 printMindMap m = drawStruct (getStructure m)

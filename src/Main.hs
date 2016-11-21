@@ -39,10 +39,11 @@ dispatchOptions usage = do {
 
   in do {
     f <- readFile file;
+    (latexPreamble, tikzPreamble) <- readPreambles;
     if not justLatex then
       drawMindMap oname $ parseMindMap $ readDoc f
     else
-      putStrLn $ asMindMapLatex $ parseMindMap $ readDoc f
+      putStrLn $ asMindMapLatex (parseMindMap $ readDoc f) latexPreamble tikzPreamble
   };
   return ();
 }
