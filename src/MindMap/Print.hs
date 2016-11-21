@@ -82,7 +82,7 @@ template pc =
     ]
 #{dta};
 #{ann};
-#{hl}
+#{hl};
 \\begin{pgfonlayer}{background}
 #{cann}\\end{pgfonlayer}
 \\end{tikzpicture}
