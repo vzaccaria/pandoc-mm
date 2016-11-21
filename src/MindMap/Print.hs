@@ -53,22 +53,24 @@ template pc =
 \\usetikzlibrary{mindmap}
 \\usetikzlibrary{positioning}   
 \\usetikzlibrary{snakes}
+
 \\usepackage{enumitem}
+
 \\providecommand{\\tightlist}{%
 \\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}
 }
 \\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}
+
 \\setlist{leftmargin=3mm}
-\\setitemize{itemsep=1mm}
-\\let\\tempone\\itemize
-\\let\\temptwo\\enditemize
-\\renewenvironment{itemize}{\\tempone\\addtolength{\\itemsep}{0.5\\baselineskip}}{\\temptwo}
+\\setlist[itemize]{itemsep=1mm, topsep=0pt}
 \\pagestyle{empty}
 \\begin{document}
 \\setlength\\abovedisplayskip{5pt}
 \\setlength\\belowdisplayskip{5pt}
 \\setlength\\abovedisplayshortskip{5pt}
 \\setlength\\belowdisplayshortskip{5pt}
+
+
 \\pgfdeclarelayer{background}
 \\pgfsetlayers{background,main}  
 \\tikzstyle{every annotation}=[fill opacity=0.0, text opacity=1, draw opacity=0.0]
@@ -91,7 +93,7 @@ template pc =
 
 drawStruct :: Structure -> String
 drawStruct t = drawTree (fmap f t) where 
-   f (Concept idn nm mta c) = nm ++ "-" ++ (show mta) ++ " - " ++ (show c) 
+   f (Concept idn _ nm mta c) = nm ++ "-" ++ (show mta) ++ " - " ++ (show c) 
 
 _m node key = Map.lookup key (getHeadingMeta $ rootLabel node)
 
@@ -117,90 +119,36 @@ _get node d s =
        "-" -> d
        _ -> v
 
-data Direction' = North | South | East | West deriving (Show,Eq)
-data Direction = D (Direction', Integer) | NoDirection deriving (Show,Eq)
-type Placement = (Direction, Direction)
 
-pempty = (NoDirection, NoDirection)
-
-pmerge :: Placement -> Direction -> Placement
-pmerge x NoDirection = x
-pmerge (NoDirection, NoDirection) x = (x, NoDirection)
-
-pmerge (D (d1, n1), NoDirection) (D (dx, nx))
-  | d1 == dx = (D (d1, n1 + nx), NoDirection)
-  | otherwise = (D (d1, n1), D (dx, nx))
-  
-pmerge (D (d1, n1), D (d2, n2)) (D (dx, nx))
-   | d1 == dx = (D (d1, n1 + nx), D (d2, n2))
-   | d2 == dx = (D (d1, n1),      D (d2, n2 + nx))
-   | otherwise = error "Illegally specified placement - You can specify max 2 different placements"
-pmerge _ _ = error "!"
-
-getPlacement' :: Char -> Direction
-getPlacement' '<' = D (West, 1)
-getPlacement' '>' = D (East, 1)
-getPlacement' '^' = D (North, 1)
-getPlacement' 'V' = D (South, 1)
-getPlacement' _ = NoDirection
-
-getPlacement :: String -> Placement
-getPlacement s = let
-  dirs = map getPlacement' s
-  placement = foldl pmerge pempty dirs
-  in placement
-
-toStringTuple :: Placement -> (String -> String)
-toStringTuple (NoDirection, NoDirection)     = \x -> [i| right of=#{x}, node distance=5cm|]
-toStringTuple (D (North, n1), NoDirection)   = \x -> [i| above of=#{x}, node distance=#{n1}cm|]
-toStringTuple (D (South, n1), NoDirection)   = \x -> [i| below of=#{x}, node distance=#{n1}cm|]
-toStringTuple (D (East,  n1), NoDirection)   = \x -> [i| right of=#{x}, node distance=#{n1}cm|]
-toStringTuple (D (West,  n1), NoDirection)   = \x -> [i| left  of=#{x}, node distance=#{n1}cm|] 
-toStringTuple (D (North, n1), D (East,  n2)) = \x -> [i| above right of=#{x}, node distance=#{n1+n2}cm|]
-toStringTuple (D (North, n1), D (West,  n2)) = \x -> [i| above  left of=#{x}, node distance=#{n1+n2}cm|]
-toStringTuple (D (South, n1), D (East,  n2)) = \x -> [i| below right of=#{x}, node distance=#{n1+n2}cm|]
-toStringTuple (D (South, n1), D (West,  n2)) = \x -> [i| below  left of=#{x}, node distance=#{n1+n2}cm|]
-toStringTuple (D (East,  n1), D (North, n2)) = \x -> [i| above right of=#{x}, node distance=#{n1+n2}cm|]
-toStringTuple (D (East,  n1), D (South, n2)) = \x -> [i| below right of=#{x}, node distance=#{n1+n2}cm|]
-toStringTuple (D (West,  n1), D (North, n2)) = \x -> [i| above  left of=#{x}, node distance=#{n1+n2}cm|]
-toStringTuple (D (West,  n1), D (South, n2)) = \x -> [i| below  left of=#{x}, node distance=#{n1+n2}cm|]
-
-toStringTuple _ = error "Invalid configuration!"
-
-getTuplePlacement :: String -> (String -> String)
-getTuplePlacement = toStringTuple . getPlacement
-
-getAnnotationPosition
-  :: Tree StructureLeaf -> (String -> String)
-getAnnotationPosition node =
-  case _m node "placement" of
-    Just v -> (getTuplePlacement v)
-    _      -> (getTuplePlacement "")
-
-annotationName :: String -> String
-annotationName identifier = identifier ++ "-ann"
 
 getAnnotationsConnections :: Tree StructureLeaf -> String -> String
 getAnnotationsConnections node cc =
   let identifier = getID $ rootLabel node
-      text       = getAnnotationText (rootLabel node)
+      uid = getUID $ rootLabel node
+      text       = getAnnotationText (rootLabel node) -- Latex content of node
   in
     if identifier /= "root" && text /= ""
-      then [i|\\draw [concept connection] (#{identifier}) edge (#{annotationName(identifier)}); #{cc} |]
+      then [i|\n\\draw [concept connection] (#{identifier}) edge (ann-#{show uid}); #{cc} |]
       else cc
 
 
 nodeToAnnotation :: Tree StructureLeaf -> String -> String
 nodeToAnnotation node cc =
-  let identifier = getID $ rootLabel node
-      text       = getAnnotationText (rootLabel node)
-      f          = getAnnotationPosition node
+  let identifier = getID $ rootLabel node -- e.g. "free-monoid-1"  
+      uid        = getUID $ rootLabel node
+      name       = getName $ rootLabel node
+      uid'       = uid - 1
+      text       = getAnnotationText (rootLabel node) -- Latex content of node
   in
-    if identifier /= "root" && text /= ""
+    if identifier /= "root"
       then
-        [i|\\node[annotation, #{f(identifier)}]  (#{annotationName(identifier)}) {#{text}}; #{cc} |]
+        if text /= ""
+        then
+          [i|\n\\node[annotation, below of=ann-#{show uid'}, anchor=north, yshift=-.5cm]  (ann-#{show uid}) {\\textbf{#{name}}:\\\\#{text}};#{cc} |]
+          else
+          [i|\n\\node[annotation, below of=ann-#{show uid'}, anchor=north]  (ann-#{show uid}) {};#{cc} |]
       else
-        cc
+        [i|\n\\node[annotation]  (ann-1) at (current page.south east) {};#{cc} |]
 
 mapAnnotations :: (Tree StructureLeaf -> String -> String) -> Tree StructureLeaf -> String
 mapAnnotations f node =

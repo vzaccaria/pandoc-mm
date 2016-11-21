@@ -22,6 +22,7 @@ type HeadingMeta = Map.Map String String
 
 data StructureLeaf =
   Concept {getID :: String
+          ,getUID :: Integer
           ,getName :: String
           ,getHeadingMeta :: HeadingMeta
           ,contents :: [Block]}
@@ -88,6 +89,7 @@ toStructure n0 ((h@(Header n1 (_,_,mt) text),bs):cs)
         subFor = unfoldr (toStructure $ n0 + 1) valid
         currentTree =
           Node (Concept (asDasherized text)
+                        0 -- to be filled later
                         (asPlainString text)
                         (Map.fromList mt)
                         bs)
@@ -99,7 +101,7 @@ toStructure _ [] = Nothing
 parseChunks :: [Chunk] -> Structure
 parseChunks cs =
   let subFor = unfoldr (toStructure 1) cs
-      currentTree = Node (Concept "root" "Root" (Map.empty) []) subFor
+      currentTree = Node (Concept "root" 0 "Root" (Map.empty) []) subFor
   in currentTree
 
 getChunks :: Pandoc -> [Chunk]
@@ -120,11 +122,11 @@ type SuppliedStructure = Supply Integer Structure
 
 buildSuppliedStructure :: Structure -> SuppliedStructure   
 buildSuppliedStructure = mapM f where
-  f o@(Concept i x y z) = do
+  f o@(Concept i _ x y z) = do -- we should fill up the id field
     n <- supply  -- get the new supply
     if i /= "root"
       then
-        return $ Concept (i ++ "-" ++ show n) x y z
+        return $ Concept (i ++ "-" ++ show n) n x y z
       else
         return o
   

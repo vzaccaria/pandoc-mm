@@ -21,14 +21,13 @@ from this:
 ``` org
 #+TITLE: Category Theory
 #+AUTHOR: Vittorio Zaccaria
-#+COLUMNS: %20ITEM %10color %10placement 
+#+COLUMNS: %20ITEM %10color 
 #+FONT: Fira Sans
 #+MONOFONT: Inconsolata
 
 * Category
 :PROPERTIES:
 :color: blue!30
-:placement: ^^^
 :END:       
 
 A triple $\mathcal{C}(O, M, \bullet)$ where 
@@ -41,21 +40,18 @@ A triple $\mathcal{C}(O, M, \bullet)$ where
 
 ** Monoid 
 :PROPERTIES:
-:placement: VV
 :END:
 
 A monoid $\mathcal{M}(M, id_0, \star)$ is just a category $\mathcal{C}(O, M, \star)$ where O = { o_1 }
 
 *** Free Monoid 
 :PROPERTIES:
-:placement: >>>
 :END:
 
 A free monoid of M is just a monoid $\mathcal{M}(List[M], [], ++)$. 
 
 *** Action 
 :PROPERTIES:
-:placement: >>>
 :END:
 
 An action of a $\mathcal{M}(M, id_0, \star)$ over a set $S$ of states is a
@@ -105,17 +101,7 @@ Supported syntax
 
 -   `:color:` is any color in a syntax understandable by
     [Tikz](http://www.texample.net/tikz/). 
--   `:placement:` this chooses the position of the annotation with
-    respect to the concept node, i.e.:
 
-    -   '\^': above
-    -   'V': below
-    -   '&lt;': left
-    -   '&gt;': right
-
-    You can use max two, non conflicting directions. The number of
-    symbols is used as distance; e.g.: `V>>>>` means
-    `below right, node distance 5cm`.
 
 *Warning*: it turns out that the official org-mode grammar does not accept spaces between properties, or between properties and headings. These are thus invalid headings:
 
@@ -124,7 +110,6 @@ Supported syntax
 
 :PROPERTIES:
 :color: blue!30
-:placement: ^^^
 :END:       
 ```
 
@@ -134,7 +119,6 @@ or:
 :PROPERTIES:
 :color: blue!30
 
-:placement: ^^^
 :END:       
 ```
 
