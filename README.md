@@ -117,7 +117,7 @@ Supported syntax
 -   `:color:` is any color in a syntax understandable by
     [Tikz](http://www.texample.net/tikz/). 
     
-- `:placement:` absolute coordinates of the annotation. If not present, *i*) it is assumed to be placed below the previous annotation or *ii)* if it is the first annotation then it is assumed to be `current page.south east`. Use property `HELPLINES` to show a grid in the pdf.
+- `:placement:` absolute coordinates of the annotation. If not present, *i*) it is assumed to be placed below the previous annotation or *ii)* if it is the first annotation then it is assumed to be `current page.south east`. Use property `HELPLINES` (see commented text in the example above) to show a help grid in the pdf.
 
 
 *Warning*: it turns out that the official org-mode grammar does not accept spaces between properties, or between properties and headings. These are thus invalid headings:
